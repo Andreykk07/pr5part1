@@ -1,0 +1,164 @@
+openapi: 3.0.3
+info:
+  title: Recipe Management API
+  version: 1.0.0
+  description: RESTful API for managing culinary recipes, ratings, and categories.
+paths:
+  /recipes:
+    get:
+      summary: List and filter recipes
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [breakfast, lunch, dinner, snack, dessert]
+        - name: difficulty
+          in: query
+          schema:
+            type: string
+            enum: [easy, medium, hard]
+        - name: maxTime
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful execution
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeListResponse'
+    post:
+      summary: Create a new recipe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeInput'
+      responses:
+        '201':
+          description: Created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeSingleResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /recipes/{id}:
+    get:
+      summary: Get recipe details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Found details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeSingleResponse'
+        '404':
+          description: Recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    Ingredient:
+      type: object
+      required: [name, amount, unit]
+      properties:
+        name:
+          type: string
+        amount:
+          type: number
+        unit:
+          type: string
+    RecipeInput:
+      type: object
+      required: [title, description, ingredients, steps, category, prepTime, servings, difficulty]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ingredient'
+        steps:
+          type: array
+          items:
+            type: string
+        category:
+          type: string
+          enum: [breakfast, lunch, dinner, snack, dessert]
+        prepTime:
+          type: integer
+        servings:
+          type: integer
+        difficulty:
+          type: string
+          enum: [easy, medium, hard]
+    Recipe:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: integer
+        - $ref: '#/components/schemas/RecipeInput'
+    RecipeListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recipe'
+        meta:
+          type: object
+          properties:
+            total:
+              type: integer
+            page:
+              type: integer
+            limit:
+              type: integer
+            totalPages:
+              type: integer
+    RecipeSingleResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Recipe'
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
